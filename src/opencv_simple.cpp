@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "gaussianNoise.h"
+#include "gaussSeidel.h"
 
 using namespace cv;
 using namespace std;
@@ -23,7 +24,9 @@ int main(int argc, char** argv)
     }
 
     Mat mColorNoise(img.size(),img.type());
-
+    Mat mGaussSeidel(img.rows,img.cols, img.type());
+    
+    
     for(int i = 0; i < NOISE_ITER; ++i)
     {
     AddGaussianNoise(img,mColorNoise,0,30.0);
@@ -34,6 +37,9 @@ int main(int argc, char** argv)
     mColorNoise.data = tmp;
     }
     }
+
+    // Denoiser
+    AddGaussSeidel(mColorNoise,mGaussSeidel);
 
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
@@ -60,5 +66,6 @@ int main(int argc, char** argv)
 
     imwrite("res/grey_res.jpg", img);
     imwrite("res/noised_res.jpg", mColorNoise);
+    imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
     return 0;
 }
