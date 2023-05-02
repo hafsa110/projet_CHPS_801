@@ -25,6 +25,7 @@ int main(int argc, char** argv)
 
     Mat mColorNoise(img.size(),img.type());
     Mat mGaussSeidel(img.rows,img.cols, img.type());
+    Mat mJacobi(img.rows,img.cols, img.type());
     
     
     for(int i = 0; i < NOISE_ITER; ++i)
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
 
     // Denoiser
     AddGaussSeidel(mColorNoise,mGaussSeidel);
-
+    AddGaussSeidel(mColorNoise,mJacobi);
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
    uint8_t* pixelPtr = (uint8_t*)img.data;
@@ -67,5 +68,6 @@ int main(int argc, char** argv)
     imwrite("res/grey_res.jpg", img);
     imwrite("res/noised_res.jpg", mColorNoise);
     imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
+    imwrite("res/jacobi_res.jpg", mJacobi);
     return 0;
 }
