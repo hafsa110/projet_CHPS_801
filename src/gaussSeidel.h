@@ -12,4 +12,6 @@ using namespace cv;
 using namespace std;
 
 bool AddGaussSeidel(const Mat m_Src, Mat &m_Dst);
+bool AddCopy(const Mat m_Src, Mat &m_Dst);
+bool AddGaussSeidel_parallel(const Mat m_Src, Mat &m_Dst);
 #endif

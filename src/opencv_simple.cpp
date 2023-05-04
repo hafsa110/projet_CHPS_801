@@ -2,6 +2,7 @@
 
 #include "gaussianNoise.h"
 #include "gaussSeidel.h"
+#include "jacobi.h"
 
 using namespace cv;
 using namespace std;
@@ -25,8 +26,10 @@ int main(int argc, char** argv)
 
     Mat mColorNoise(img.size(),img.type());
     Mat mGaussSeidel(img.rows,img.cols, img.type());
+    Mat mGaussSeidel_parallel(img.rows,img.cols, img.type());
+    Mat mCopy(img.rows,img.cols, img.type());
     Mat mJacobi(img.rows,img.cols, img.type());
-    
+    AddCopy(img,mCopy);
     
     for(int i = 0; i < NOISE_ITER; ++i)
     {
@@ -41,7 +44,9 @@ int main(int argc, char** argv)
 
     // Denoiser
     AddGaussSeidel(mColorNoise,mGaussSeidel);
-    AddGaussSeidel(mColorNoise,mJacobi);
+    AddGaussSeidel_parallel(mColorNoise,mGaussSeidel_parallel);
+    AddJacobi(mColorNoise,mJacobi);
+    
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
    uint8_t* pixelPtr = (uint8_t*)img.data;
@@ -69,5 +74,6 @@ int main(int argc, char** argv)
     imwrite("res/noised_res.jpg", mColorNoise);
     imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
     imwrite("res/jacobi_res.jpg", mJacobi);
+    imwrite("res/copy_res.jpg", mCopy);
     return 0;
 }
