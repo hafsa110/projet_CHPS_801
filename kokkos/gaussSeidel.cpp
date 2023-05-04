@@ -1,64 +1,29 @@
-/*
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
-//
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
-// the U.S. Government retains certain rights in this software.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions Contact  H. Carter Edwards (hcedwar@sandia.gov)
-//
-// ************************************************************************
-//@HEADER
-*/
-
-// EXERCISE 1 Goal:
-//   Use Kokkos to parallelize the outer loop of <y,Ax> using Kokkos::parallel_reduce.
-
 #include <limits>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <sys/time.h>
-
-// EXERCISE: Include Kokkos_Core.hpp.
-//           cmath library unnecessary after.
 #include <Kokkos_Core.hpp>
 #include <cmath>
+#include <gaussSeidel.h>
 
-void checkSizes( int &N, int &M, int &S, int &nrepeat );
+using namespace cv;
+using namespace std;
+
+bool applyJacobi(const Mat mSrc, Mat &mDst,double Mean, double StdDev){
+  if(mSrc.empty())
+  {
+      cout<<"[Error]! Input Image Empty!";
+      return 0;
+  }
+
+  return true;
+}
+
 
 int main( int argc, char* argv[] )
 {
+  /*
   int N = -1;         // number of rows 2^12
   int M = -1;         // number of columns 2^10
   int S = -1;         // total size 2^22
@@ -92,9 +57,6 @@ int main( int argc, char* argv[] )
     }
   }
 
-  // Check sizes.
-  checkSizes( N, M, S, nrepeat );
-
   // EXERCISE: Initialize Kokkos runtime.
   //           Include braces to encapsulate code between initialize and finalize calls
   Kokkos::initialize( argc, argv );
@@ -117,6 +79,7 @@ int main( int argc, char* argv[] )
     y[ i ] = 1;
   }
   */
+  /*
   Kokkos::parallel_for(N, 
     [=] (const int64_t i) {
       y[i] = 1;
@@ -129,7 +92,7 @@ int main( int argc, char* argv[] )
   for ( int i = 0; i < M; ++i ) {
     x[ i ] = 1;
   }
-  */
+  *//*
   Kokkos::parallel_for(M, 
     [=] (const int64_t i) {
       x[i] = 1;
@@ -152,7 +115,7 @@ int main( int argc, char* argv[] )
     }
   }
   */
-
+/*
   // Timer products.
   Kokkos::Timer timer;
   struct timeval begin, end;
@@ -185,7 +148,7 @@ int main( int argc, char* argv[] )
       result += y[ j ] * temp2;
     }
     */
-
+/*
     // Output result.
     if ( repeat == ( nrepeat - 1 ) ) {
       printf( "  Computed result for %d x %d is %lf\n", N, M, result );
@@ -223,47 +186,19 @@ int main( int argc, char* argv[] )
   // EXERCISE: finalize Kokkos runtime
   // }
   Kokkos::finalize();
+*/
+  CommandLineParser parser(argc, argv,
+                               "{@input   |img/lena.jpg|input image}");
+  parser.printMessage();
+
+  String imageName = parser.get<String>("@input");
+  string image_path = samples::findFile(imageName);
+  Mat img = imread(image_path, IMREAD_COLOR);
+  if(img.empty())
+  {
+      std::cout << "Could not read the image: " << image_path << std::endl;
+      return 1;
+  }
 
   return 0;
-}
-
-void checkSizes( int &N, int &M, int &S, int &nrepeat ) {
-  // If S is undefined and N or M is undefined, set S to 2^22 or the bigger of N and M.
-  if ( S == -1 && ( N == -1 || M == -1 ) ) {
-    S = pow( 2, 22 );
-    if ( S < N ) S = N;
-    if ( S < M ) S = M;
-  }
-
-  // If S is undefined and both N and M are defined, set S = N * M.
-  if ( S == -1 ) S = N * M;
-
-  // If both N and M are undefined, fix row length to the smaller of S and 2^10 = 1024.
-  if ( N == -1 && M == -1 ) {
-    if ( S > 1024 ) {
-      M = 1024;
-    }
-    else {
-      M = S;
-    }
-  }
-
-  // If only M is undefined, set it.
-  if ( M == -1 ) M = S / N;
-
-  // If N is undefined, set it.
-  if ( N == -1 ) N = S / M;
-
-  printf( "  Total size S = %d N = %d M = %d\n", S, N, M );
-
-  // Check sizes.
-  if ( ( S < 0 ) || ( N < 0 ) || ( M < 0 ) || ( nrepeat < 0 ) ) {
-    printf( "  Sizes must be greater than 0.\n" );
-    exit( 1 );
-  }
-
-  if ( ( N * M ) != S ) {
-    printf( "  N * M != S\n" );
-    exit( 1 );
-  }
 }
