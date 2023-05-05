@@ -2,13 +2,14 @@
 
 #include "gaussianNoise.h"
 #include "gaussSeidel.h"
+#include "gaussSeidelTask.h"
 #include "jacobi.h"
 
 using namespace cv;
 using namespace std;
 
-#define NOISE_ITER 15
-#define BLUR_ITER 30
+#define NOISE_ITER 2
+#define BLUR_ITER 50
 
 int main(int argc, char** argv)
 {
@@ -27,7 +28,8 @@ int main(int argc, char** argv)
 
     Mat mColorNoise(img.size(),img.type());
     Mat mGaussSeidel(img.rows,img.cols, img.type());
-    Mat mGaussSeidelWave(img.rows,img.cols, img.type());
+    Mat mGaussSeidelDiag(img.rows,img.cols, img.type());
+    Mat mGaussSeidelTask(img.rows,img.cols, img.type());
     Mat mJacobi(img.rows,img.cols, img.type());
 
 
@@ -44,20 +46,18 @@ int main(int argc, char** argv)
     }
 
     // Denoiser
-    // gauss-seidel iterations
+    // gauss-seidel Naive
     Mat mTmp = mColorNoise.clone();
-    Mat tmp;
-    for(int i = 0; i < BLUR_ITER; ++i){
-        AddGaussSeidel(mTmp,mGaussSeidel);
-        mTmp = mGaussSeidel;
-    }
+    AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
 
-    //Gauss Seidel Wave
+
+    //Gauss Seidel Diagonal algorithm
     mTmp = mColorNoise.clone();
-    for(int i = 0; i < BLUR_ITER; ++i){
-        AddGaussSeidelLoop(mTmp,mGaussSeidelWave);
-        mTmp = mGaussSeidelWave;
-    }
+    AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, BLUR_ITER);
+
+    //Gauss Seidel Task (parallel)
+    mTmp = mColorNoise.clone();
+    AddGaussSeidelDiag(mTmp,mGaussSeidelTask, BLUR_ITER);
 
     // Jacobi
     mTmp = mColorNoise.clone();
@@ -91,7 +91,8 @@ int main(int argc, char** argv)
     imwrite("res/grey_res.jpg", img);
     imwrite("res/noised_res.jpg", mColorNoise);
     imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
-    imwrite("res/gaussSeidelWave_res.jpg", mGaussSeidelWave);
+    imwrite("res/gaussSeidelDiag_res.jpg", mGaussSeidelDiag);
+    imwrite("res/gaussSeidelTask_res.jpg", mGaussSeidelTask);
     imwrite("res/jacobi_res.jpg", mJacobi);
     return 0;
 }
