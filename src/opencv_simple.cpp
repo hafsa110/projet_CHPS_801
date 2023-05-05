@@ -7,8 +7,8 @@
 using namespace cv;
 using namespace std;
 
-#define NOISE_ITER 15
-#define BLUR_ITER 30
+#define NOISE_ITER 5
+#define BLUR_ITER 10
 
 int main(int argc, char** argv)
 {

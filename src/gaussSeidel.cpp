@@ -48,7 +48,7 @@ bool AddGaussSeidel_wave(const Mat m_Src, Mat &m_Dst){
     Mat m_Src_border(m_Src.rows + 1,m_Src.cols + 1,m_Src.type());
     Mat m_Dst_border(m_Src.rows + 1,m_Src.cols + 1,m_Src.type());
 
-    int border_type = BORDER_CONSTANT, size_border = 1;
+    int border_type = BORDER_REPLICATE, size_border = 1;
 
     // Calcul du nombre de diagonales dans l'image
     int number_diag = rows + cols - 1;
@@ -88,6 +88,10 @@ bool AddGaussSeidel_wave(const Mat m_Src, Mat &m_Dst){
             }
         }
     }
+    return true;
+}
+bool AddGaussSeidelLoop(const Mat m_Src, Mat &m_Dst){
+    
     return true;
 }
 // parallel version (...)
