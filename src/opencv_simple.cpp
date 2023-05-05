@@ -7,8 +7,8 @@
 using namespace cv;
 using namespace std;
 
-#define NOISE_ITER 5
-#define BLUR_ITER 10
+#define NOISE_ITER 15
+#define BLUR_ITER 30
 
 int main(int argc, char** argv)
 {
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     //Gauss Seidel Wave
     mTmp = mColorNoise.clone();
     for(int i = 0; i < BLUR_ITER; ++i){
-        AddGaussSeidel_wave(mTmp,mGaussSeidelWave);
+        AddGaussSeidelLoop(mTmp,mGaussSeidelWave);
         mTmp = mGaussSeidelWave;
     }
 
@@ -65,8 +65,6 @@ int main(int argc, char** argv)
         AddJacobi(mTmp,mJacobi);
         mTmp = mJacobi;
     }
-    
-    
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
    uint8_t* pixelPtr = (uint8_t*)img.data;

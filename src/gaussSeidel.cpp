@@ -90,10 +90,66 @@ bool AddGaussSeidel_wave(const Mat m_Src, Mat &m_Dst){
     }
     return true;
 }
-bool AddGaussSeidelLoop(const Mat m_Src, Mat &m_Dst){
-    
+bool Diag_Top(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
+    for(int row = 0; row < rows; row++){
+        for(int col = 0; col < cols - row; col++){
+            for(int chanel = 0; chanel < 3; chanel++){
+                m_Dst_border.at<Vec3b>((row + 1),(col + 1))[chanel] = (m_Dst_border.at<Vec3b>((row + 1) - 1,(col + 1))[chanel] +
+                m_Dst_border.at<Vec3b>((row + 1),(col + 1) - 1)[chanel] + m_Src_border.at<Vec3b>((row + 1) + 1,(col + 1))[chanel] +
+                m_Src_border.at<Vec3b>((row + 1),(col + 1) + 1)[chanel] + m_Src_border.at<Vec3b>((row + 1),(col + 1))[chanel]) / 5;
+            }
+        }
+    }
     return true;
 }
+bool Diag_Bot(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
+    for(int row = 1; row < rows; row++){
+        for(int col = cols - row; col < cols; col++){
+            for(int chanel = 0; chanel < 3; chanel++){
+                m_Dst_border.at<Vec3b>((row + 1),(col + 1))[chanel] = (m_Dst_border.at<Vec3b>((row + 1) - 1,(col + 1))[chanel] +
+                m_Dst_border.at<Vec3b>((row + 1),(col + 1) - 1)[chanel] + m_Src_border.at<Vec3b>((row + 1) + 1,(col + 1))[chanel] +
+                m_Src_border.at<Vec3b>((row + 1),(col + 1) + 1)[chanel] + m_Src_border.at<Vec3b>((row + 1),(col + 1))[chanel]) / 5;
+            }
+        }
+    }
+    return true;
+}
+bool AddGaussSeidelLoop(const Mat m_Src, Mat &m_Dst){
+
+    // Variables Declaration
+    int rows = m_Src.rows, cols = m_Src.cols;
+    Mat m_Src_border(m_Src.rows + 1,m_Src.cols + 1,m_Src.type());
+    Mat m_Dst_border(m_Src.rows + 1,m_Src.cols + 1,m_Src.type());
+
+    int border_type = BORDER_REPLICATE;
+    int size_border = 1;
+
+    // Verify if the source image is empty
+    if(m_Src.empty())
+    {
+        cout<<"[Error]! Input Image Empty!";
+        return 0;
+    }
+    
+    // Add a border of zeros to the source matrix
+    copyMakeBorder(m_Src,m_Src_border,size_border,size_border,size_border,size_border,border_type,0);
+    copyMakeBorder(m_Dst,m_Dst_border,size_border,size_border,size_border,size_border,border_type,0);
+
+    Diag_Top(m_Src_border,m_Dst_border,rows,cols);
+    Diag_Bot(m_Src_border,m_Dst_border,rows,cols);
+
+    // Copy region of interest(without borders) into the Dst image
+    for(int i = 1; i <= rows; ++i){
+        for(int j = 1; j <= cols; ++j){
+            // calculate the value of a pixel for each channel following the gaussSeidel method
+            for(int chanel = 0; chanel < 3; chanel++){
+                    m_Dst.at<Vec3b>(i - 1,j - 1)[chanel] = m_Dst_border.at<Vec3b>(i,j)[chanel];
+            }
+        }
+    }
+    return true;
+}
+
 // parallel version (...)
 bool AddGaussSeidel_wave_task(const Mat m_Src, Mat &m_Dst){
     // Déclaration des variables
