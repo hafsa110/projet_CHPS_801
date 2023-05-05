@@ -1,8 +1,12 @@
 KOKKOS_PATH ?= /home/cchevalier/kokkos_work/kokkos
 KOKKOS_DEVICES = "OpenMP"
-EXE_NAME = "gaussSeidel"
+EXE_NAME = "redBlackJacobi"
 
-SRC = gaussSeidel.cpp
+SRC = redBlackJacobi.cpp
+
+CC=g++
+CFLAGS=-Wall -O3
+LDFLAGS=
 
 default: build
 	echo "Start Build"
@@ -28,6 +32,9 @@ DEPFLAGS = -M
 OBJ = $(SRC:.cpp=.o)
 LIB =
 
+CFLAGS += $(shell pkg-config --cflags opencv4)
+LDFLAGS += $(shell pkg-config --libs opencv4)
+
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 build: $(EXE)
@@ -39,7 +46,7 @@ obj/%.o: %.cpp
 	$(CC) $(CFLAGS) $< -c -o $@
 
 $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(LIB) -o $(EXE)
+	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(LIB) -o $(EXE) 
 
 clean: kokkos-clean
 	rm -f *.o *.cuda *.host
