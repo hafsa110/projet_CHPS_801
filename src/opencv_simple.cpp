@@ -8,6 +8,7 @@ using namespace cv;
 using namespace std;
 
 #define NOISE_ITER 15
+#define BLUR_ITER 30
 
 int main(int argc, char** argv)
 {
@@ -27,12 +28,10 @@ int main(int argc, char** argv)
     Mat mColorNoise(img.size(),img.type());
     Mat mGaussSeidel(img.rows,img.cols, img.type());
     Mat mGaussSeidelWave(img.rows,img.cols, img.type());
-    Mat mCopy(img.rows,img.cols, img.type());
     Mat mJacobi(img.rows,img.cols, img.type());
-    AddCopy(img,mCopy);
-    AddGaussSeidel(img,mGaussSeidel);
-    AddGaussSeidel_wave(img,mGaussSeidelWave);
-    
+
+
+    // Noiser
     for(int i = 0; i < NOISE_ITER; ++i)
     {
     AddGaussianNoise(img,mColorNoise,0,30.0);
@@ -45,8 +44,28 @@ int main(int argc, char** argv)
     }
 
     // Denoiser
+    // gauss-seidel iterations
+    Mat mTmp = mColorNoise.clone();
+    Mat tmp;
+    for(int i = 0; i < BLUR_ITER; ++i){
+        AddGaussSeidel(mTmp,mGaussSeidel);
+        mTmp = mGaussSeidel;
+    }
+
+    //Gauss Seidel Wave
+    mTmp = mColorNoise.clone();
+    for(int i = 0; i < BLUR_ITER; ++i){
+        AddGaussSeidel_wave(mTmp,mGaussSeidelWave);
+        mTmp = mGaussSeidelWave;
+    }
+
+    // Jacobi
+    mTmp = mColorNoise.clone();
+    for(int i = 0; i < BLUR_ITER; ++i){
+        AddJacobi(mTmp,mJacobi);
+        mTmp = mJacobi;
+    }
     
-    AddJacobi(mColorNoise,mJacobi);
     
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
@@ -76,6 +95,5 @@ int main(int argc, char** argv)
     imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
     imwrite("res/gaussSeidelWave_res.jpg", mGaussSeidelWave);
     imwrite("res/jacobi_res.jpg", mJacobi);
-    imwrite("res/copy_res.jpg", mCopy);
     return 0;
 }

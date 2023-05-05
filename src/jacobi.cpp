@@ -4,7 +4,7 @@ bool AddJacobi(const Mat m_Src, Mat &m_Dst)
 {
     Mat m_Src_border(m_Src.rows,m_Src.cols,m_Src.type());
     int border_type = BORDER_CONSTANT;
-    int size_border = 0;
+    int size_border = 1;
 
 
     // Verify if the source image is empty
