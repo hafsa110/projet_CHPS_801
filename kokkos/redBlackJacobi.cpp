@@ -88,15 +88,7 @@ int main( int argc, char* argv[] )
   typedef Kokkos::RangePolicy<ExecSpace>  range_policy;
 
   // Allocate Matrix on device.
-  Mat h_mColorDenoise(img.size(), img.type());
-  img.copyTo(h_mColorDenoise);
-  int channels = img.channels(); 
-  Kokkos::View<cv::Vec3b**, Kokkos::LayoutRight, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> mColorDenoise(reinterpret_cast<Vec3b*>(h_mColorDenoise.data), img.rows, img.cols);
-
-  // Create host mirrors of device views.
-
-  // Initialize matrix on host.
-  Kokkos::deep_copy(mColorDenoise, h_mColorDenoise);
+  Kokkos::View<cv::Vec3b**, Kokkos::LayoutRight, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> mColorDenoise(reinterpret_cast<Vec3b*>(img.data), img.rows, img.cols);
 
   Kokkos :: parallel_for(DENOISE_ITER, 
     [=] (const int64_t it) {
@@ -130,7 +122,9 @@ int main( int argc, char* argv[] )
 
   fprintf(stdout, "Writting the output image of size %dx%d...\n", img.rows, img.cols);
 
-  //imwrite("res/redBlack_res.jpg", mColorDenoise);
+  std::memcpy(img.data, reinterpret_cast<uchar*>(mColorDenoise.data()), img.total() * img.elemSize());
+
+  imwrite("res/redBlack_res_farida.jpg", img);
 
   }
   Kokkos::finalize();
