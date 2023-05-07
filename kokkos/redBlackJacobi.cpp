@@ -90,6 +90,8 @@ int main( int argc, char* argv[] )
   // Allocate Matrix on device.
   Kokkos::View<cv::Vec3b**, Kokkos::LayoutRight, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> mColorDenoise(reinterpret_cast<Vec3b*>(img.data), img.rows, img.cols);
 
+  Kokkos::Timer timer;
+
   Kokkos :: parallel_for(DENOISE_ITER, 
     [=] (const int64_t it) {
       //mise a jour des points rouges
@@ -120,7 +122,9 @@ int main( int argc, char* argv[] )
     }
   );
 
-  fprintf(stdout, "Writting the output image of size %dx%d...\n", img.rows, img.cols);
+  double end_t = timer.seconds();
+
+  cout << "| Red Black with Kokkos approch version took " << end_t << " seconds." << endl;
 
   std::memcpy(img.data, reinterpret_cast<uchar*>(mColorDenoise.data()), img.total() * img.elemSize());
 
