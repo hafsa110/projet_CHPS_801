@@ -47,14 +47,6 @@ bool applyJacobi(const Mat m_Src, Mat &m_Dst){
 
 int main( int argc, char* argv[] )
 {
-  /*
-  Kokkos::initialize(argc, argv);
-
-  std::cout << "Hello, World!" << std::endl;
-
-  Kokkos::finalize();
-  */
-
   CommandLineParser parser(argc, argv,
                                "{@input   |img/lena.jpg|input image}");
   parser.printMessage();
@@ -68,46 +60,77 @@ int main( int argc, char* argv[] )
       return 1;
   }
 
-  Mat mColorDenoise(img.size(),img.type());
-  img.copyTo(mColorDenoise);
+  int rows = img.rows;
+  int cols = img.cols;
 
-  int rows = mColorDenoise.rows;
-  int cols = mColorDenoise.cols;
-
-  Kokkos::initialize( argc, argv );
+  Kokkos::initialize(argc, argv);
   {
 
-  for(int it = 0; it < DENOISE_ITER; ++it){
-    //mise a jour des points rouges
-    for(int i = 0; i < rows; ++i){
-      for (int j = 0; j < cols; ++j) {
-        if((i+j)%2 == 0){
-          for(int chanel = 0; chanel < 3; chanel++){
-            mColorDenoise.at<Vec3b>(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise.at<Vec3b>(i - 1,j)[chanel] +
-              mColorDenoise.at<Vec3b>(i,j - 1)[chanel] + mColorDenoise.at<Vec3b>(i + 1,j)[chanel] +
-              mColorDenoise.at<Vec3b>(i,j + 1)[chanel] + mColorDenoise.at<Vec3b>(i, j)[chanel]) / 5;
-          } 
-        }
-      }
-    }
+  typedef Kokkos::LayoutRight  Layout;
 
-    //mise a jour des points noirs 
-    for(int i = 0; i < rows; ++i){
-      for (int j = 0; j < cols; ++j) {
-        if((i+j)%2 == 1){
-          for(int chanel = 0; chanel < 3; chanel++){
-            mColorDenoise.at<Vec3b>(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise.at<Vec3b>(i - 1,j)[chanel] +
-              mColorDenoise.at<Vec3b>(i,j - 1)[chanel] + mColorDenoise.at<Vec3b>(i + 1,j)[chanel] +
-              mColorDenoise.at<Vec3b>(i,j + 1)[chanel] + mColorDenoise.at<Vec3b>(i, j)[chanel]) / 5;
-          } 
+  #ifdef KOKKOS_ENABLE_CUDA
+  #define MemSpace Kokkos::CudaSpace
+  #endif
+  #ifdef KOKKOS_ENABLE_HIP
+  #define MemSpace Kokkos::Experimental::HIPSpace
+  #endif
+  #ifdef KOKKOS_ENABLE_OPENMPTARGET
+  #define MemSpace Kokkos::OpenMPTargetSpace
+  #endif
+
+  #ifndef MemSpace
+  #define MemSpace Kokkos::HostSpace
+  #endif
+
+  using ExecSpace = MemSpace::execution_space;
+  using range_policy = Kokkos::RangePolicy<ExecSpace>;
+
+  typedef Kokkos::RangePolicy<ExecSpace>  range_policy;
+
+  // Allocate Matrix on device.
+  Mat h_mColorDenoise(img.size(), img.type());
+  img.copyTo(h_mColorDenoise);
+  int channels = img.channels(); 
+  Kokkos::View<cv::Vec3b**, Kokkos::LayoutRight, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> mColorDenoise(reinterpret_cast<Vec3b*>(h_mColorDenoise.data), img.rows, img.cols);
+
+  // Create host mirrors of device views.
+
+  // Initialize matrix on host.
+  Kokkos::deep_copy(mColorDenoise, h_mColorDenoise);
+
+  Kokkos :: parallel_for(DENOISE_ITER, 
+    [=] (const int64_t it) {
+      //mise a jour des points rouges
+      for(int i = 0; i < rows; ++i){
+        for (int j = 0; j < cols; ++j) {
+          if((i+j)%2 == 0){
+            for(int chanel = 0; chanel < 3; chanel++){
+              mColorDenoise(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1,j)[chanel] +
+                mColorDenoise(i,j - 1)[chanel] + mColorDenoise(i + 1,j)[chanel] +
+                mColorDenoise(i,j + 1)[chanel] + mColorDenoise(i, j)[chanel]) / 5;
+            } 
+          }
+        }
+      }
+
+      //mise a jour des points noirs 
+      for(int i = 0; i < rows; ++i){
+        for (int j = 0; j < cols; ++j) {
+          if((i+j)%2 == 1){
+            for(int chanel = 0; chanel < 3; chanel++){
+              mColorDenoise(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1,j)[chanel] +
+                mColorDenoise(i,j - 1)[chanel] + mColorDenoise(i + 1,j)[chanel] +
+                mColorDenoise(i,j + 1)[chanel] + mColorDenoise(i, j)[chanel]) / 5;
+            } 
+          }
         }
       }
     }
-  }
+  );
 
   fprintf(stdout, "Writting the output image of size %dx%d...\n", img.rows, img.cols);
 
-  imwrite("res/redBlack_res.jpg", mColorDenoise);
+  //imwrite("res/redBlack_res.jpg", mColorDenoise);
 
   }
   Kokkos::finalize();
