@@ -8,7 +8,7 @@
 using namespace cv;
 using namespace std;
 
-#define NOISE_ITER 2
+#define NOISE_ITER 5
 #define BLUR_ITER 50
 
 int main(int argc, char** argv)
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     // Denoiser
     // gauss-seidel Naive
     Mat mTmp = mColorNoise.clone();
-    AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
+    // AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
 
 
     //Gauss Seidel Diagonal algorithm
@@ -60,11 +60,11 @@ int main(int argc, char** argv)
     AddGaussSeidelDiag(mTmp,mGaussSeidelTask, BLUR_ITER);
 
     // Jacobi
-    mTmp = mColorNoise.clone();
-    for(int i = 0; i < BLUR_ITER; ++i){
-        AddJacobi(mTmp,mJacobi);
-        mTmp = mJacobi;
-    }
+    // mTmp = mColorNoise.clone();
+    // for(int i = 0; i < BLUR_ITER; ++i){
+    //     AddJacobi(mTmp,mJacobi);
+    //     mTmp = mJacobi;
+    // }
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
    uint8_t* pixelPtr = (uint8_t*)img.data;
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     imwrite("res/grey_res.jpg", img);
     imwrite("res/noised_res.jpg", mColorNoise);
-    imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
+    // imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
     imwrite("res/gaussSeidelDiag_res.jpg", mGaussSeidelDiag);
     imwrite("res/gaussSeidelTask_res.jpg", mGaussSeidelTask);
     imwrite("res/jacobi_res.jpg", mJacobi);
