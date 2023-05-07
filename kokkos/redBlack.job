@@ -1,0 +1,20 @@
+#SBATCH -J "Red Black Kokkos"
+
+#SBATCH --error=kokkos.err
+#SBATCH --output=kokkos.out
+
+#SBATCH -N 1 
+#SBATCH --gres=gpu:4
+#SBATCH -p short
+#SBATCH --reservation=CHPS
+#SBATCH --exclusive
+#SBATCH --exclude=romeo17,romeo19
+
+export KOKKOS_PATH=/home/cchevalier/kokkos_work/kokkos
+export OMP_PROC_BIND=true
+
+module purge
+module load gcc/10.2
+module load cuda/11.4
+module load opencv/4.5.1
+module list
