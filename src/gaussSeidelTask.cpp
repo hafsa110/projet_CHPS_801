@@ -23,7 +23,7 @@ bool Task_Diag_Top(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
 }
 bool Task_Diag_Bot(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     for(int row = 1; row < rows; row++){
-        for(int col = cols - row; col < cols; col++){
+        for(int col = cols - row - 50; col < cols; col++){
             for(int chanel = 0; chanel < 3; chanel++){
                 m_Dst_border.at<Vec3b>((row + 1),(col + 1))[chanel] = (m_Dst_border.at<Vec3b>((row + 1) - 1,(col + 1))[chanel] +
                 m_Dst_border.at<Vec3b>((row + 1),(col + 1) - 1)[chanel] + m_Src_border.at<Vec3b>((row + 1) + 1,(col + 1))[chanel] +
@@ -39,6 +39,9 @@ bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
     // Variables Declaration
     int rows = m_Src.rows, cols = m_Src.cols;
     Mat m_Tmp_border(m_Src.rows + 1,m_Src.cols + 1,m_Src.type());
+
+    int num_threads = omp_get_num_procs();
+    omp_set_num_threads(num_threads);
     
     // timer
     double start_t, end_t;
@@ -70,7 +73,6 @@ bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
     Mat* prev_top_ptr;
     Mat* next_bot_ptr;
     Mat* prev_bot_ptr;
-    int wTask = 0;
     start_t = omp_get_wtime();
     #pragma omp parallel
     #pragma omp single
@@ -88,15 +90,15 @@ bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
             next_bot_ptr = &tmp_vec[i+1];
             if(i == 0){
                 #pragma omp task depend(out: next_top_ptr)
-                    {
-                        Task_Diag_Top(tmp_vec[i],dst_vec[i],rows,cols);
-                    }
-                    #pragma omp task depend(in: next_top_ptr) depend(out: next_bot_ptr)
-                    {
-                        
-                        tmp_vec[i+1] = dst_vec[i];
-                        Task_Diag_Bot(tmp_vec[i],tmp_vec[i+1],rows,cols);
-                    }
+                {
+                    Task_Diag_Top(tmp_vec[i],dst_vec[i],rows,cols);
+                }
+                #pragma omp task depend(in: next_top_ptr) depend(out: next_bot_ptr)
+                {
+                    
+                    tmp_vec[i+1] = dst_vec[i];
+                    Task_Diag_Bot(tmp_vec[i],tmp_vec[i+1],rows,cols);
+                }
             }
             else{
                 #pragma omp task depend(in: prev_top_ptr) depend(out: next_top_ptr)

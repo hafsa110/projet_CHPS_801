@@ -1,0 +1,2 @@
+28
+heyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyheyNumber of available cores: 28

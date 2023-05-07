@@ -9,7 +9,7 @@ using namespace cv;
 using namespace std;
 
 #define NOISE_ITER 5
-#define BLUR_ITER 50
+#define BLUR_ITER 100
 
 int main(int argc, char** argv)
 {
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     // Denoiser
     // gauss-seidel Naive
     Mat mTmp = mColorNoise.clone();
-    // AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
+    AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
 
 
     //Gauss Seidel Diagonal algorithm
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
     imwrite("res/grey_res.jpg", img);
     imwrite("res/noised_res.jpg", mColorNoise);
-    // imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
+    imwrite("res/gaussSeidel_res.jpg", mGaussSeidel);
     imwrite("res/gaussSeidelDiag_res.jpg", mGaussSeidelDiag);
     imwrite("res/gaussSeidelTask_res.jpg", mGaussSeidelTask);
     imwrite("res/jacobi_res.jpg", mJacobi);

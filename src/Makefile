@@ -10,6 +10,7 @@ LDFLAGS += $(shell pkg-config --libs opencv4)
 opencv_test.pgr: obj/opencv_simple.o obj/gaussianNoise.o obj/gaussSeidel.o obj/gaussSeidelTask.o obj/jacobi.o
 	$(CC) $(CFLAGS) $^ -o $@  $(LDFLAGS)
 
+
 obj/%.o: %.cpp
 	$(CC) $(CFLAGS) $< -c -o $@
 
