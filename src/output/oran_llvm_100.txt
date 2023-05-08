@@ -1,0 +1,28 @@
+rm -rf obj/*.o *.pgr
+rm -rf objllvm/*.o
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   opencv_simple.cpp -c -o objllvm/opencv_simple.o
+clang-12: warning: -Z-reserved-lib-stdc++: 'linker' input unused [-Wunused-command-line-argument]
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   gaussianNoise.cpp -c -o objllvm/gaussianNoise.o
+clang-12: warning: -Z-reserved-lib-stdc++: 'linker' input unused [-Wunused-command-line-argument]
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   gaussSeidel.cpp -c -o objllvm/gaussSeidel.o
+clang-12: warning: -Z-reserved-lib-stdc++: 'linker' input unused [-Wunused-command-line-argument]
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   gaussSeidelTask.cpp -c -o objllvm/gaussSeidelTask.o
+clang-12: warning: -Z-reserved-lib-stdc++: 'linker' input unused [-Wunused-command-line-argument]
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   jacobi.cpp -c -o objllvm/jacobi.o
+clang-12: warning: -Z-reserved-lib-stdc++: 'linker' input unused [-Wunused-command-line-argument]
+clang --gcc-toolchain=/apps/2021/gcc/10.2/ -lstdc++ -Wall -O3 -fopenmp -I/apps/2021/opencv/4.5.2-contrib/include/opencv4   objllvm/opencv_simple.o objllvm/gaussianNoise.o objllvm/gaussSeidel.o objllvm/gaussSeidelTask.o objllvm/jacobi.o -o llvm_opencv_test.pgr  -L/apps/2021/opencv/4.5.2-contrib/lib64 -lopencv_gapi -lopencv_stitching -lopencv_alphamat -lopencv_aruco -lopencv_bgsegm -lopencv_bioinspired -lopencv_ccalib -lopencv_dnn_objdetect -lopencv_dnn_superres -lopencv_dpm -lopencv_face -lopencv_freetype -lopencv_fuzzy -lopencv_hfs -lopencv_img_hash -lopencv_intensity_transform -lopencv_line_descriptor -lopencv_mcc -lopencv_quality -lopencv_rapid -lopencv_reg -lopencv_rgbd -lopencv_saliency -lopencv_stereo -lopencv_structured_light -lopencv_phase_unwrapping -lopencv_superres -lopencv_optflow -lopencv_surface_matching -lopencv_tracking -lopencv_highgui -lopencv_datasets -lopencv_text -lopencv_plot -lopencv_videostab -lopencv_videoio -lopencv_wechat_qrcode -lopencv_xfeatures2d -lopencv_shape -lopencv_ml -lopencv_ximgproc -lopencv_video -lopencv_dnn -lopencv_xobjdetect -lopencv_objdetect -lopencv_calib3d -lopencv_imgcodecs -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo -lopencv_imgproc -lopencv_core  
+Usage: llvm_opencv_test.pgr [params] input 
+
+
+	input (value:img/Oran.jpg)
+		input image
+----------------------------------------------------------------------------------------------------
+| Gauss Seidel naif version took 0.631484 seconds.
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+| Gauss Seidel Diagonal approch took 0.639031 seconds.
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+| Parallel version of Diagonal approch version took 0.428603 seconds.
+----------------------------------------------------------------------------------------------------
+Writting the output image of size 1000x1000...
