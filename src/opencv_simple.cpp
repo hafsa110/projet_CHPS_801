@@ -9,7 +9,7 @@ using namespace cv;
 using namespace std;
 
 #define NOISE_ITER 10
-#define BLUR_ITER 10
+#define GAUSS_ITER 10
 
 int main(int argc, char** argv)
 {
@@ -48,20 +48,20 @@ int main(int argc, char** argv)
     // Denoiser
     // gauss-seidel Naive
     Mat mTmp = mColorNoise.clone();
-    AddGaussSeidel(mTmp,mGaussSeidel, BLUR_ITER);
+    AddGaussSeidel(mTmp,mGaussSeidel, GAUSS_ITER);
 
 
-    //Gauss Seidel Diagonal algorithm
+    //Gauss Seidel Diagonal algorithm version wave (parallel sur les diagonales)
     // mTmp = mColorNoise.clone();
-    // AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, BLUR_ITER);
+    // AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, GAUSS_ITER);
 
-    //Gauss Seidel Task (parallel)
+    //Gauss Seidel Task (parallel entre les itérations)
     mTmp = mColorNoise.clone();
-    AddGaussSeidelDiag(mTmp,mGaussSeidelTask, BLUR_ITER);
+    AddGaussSeidelDiag(mTmp,mGaussSeidelTask, GAUSS_ITER);
 
     // wave
     mTmp = mColorNoise.clone();
-    for(int i = 0; i < BLUR_ITER; ++i){
+    for(int i = 0; i < GAUSS_ITER; ++i){
         AddGaussSeidel_wave(mTmp,mGaussSeidelDiag);
         mTmp = mGaussSeidelDiag;
     }

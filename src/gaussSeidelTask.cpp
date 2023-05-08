@@ -8,7 +8,7 @@
 #include <vector>
 #include <unistd.h>
 using namespace std;
-
+// partie gauche de la diagonal
 bool Task_Diag_Top(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     for(int row = 0; row < rows; row++){
         for(int col = 0; col < cols - row; col++){
@@ -21,6 +21,7 @@ bool Task_Diag_Top(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     }
     return true;
 }
+// partie droite de la diagonal
 bool Task_Diag_Bot(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     for(int row = 1; row < rows; row++){
         for(int col = cols - row - 50; col < cols; col++){
@@ -33,7 +34,7 @@ bool Task_Diag_Bot(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     }
     return true;
 }
-
+// Partie parallél
 bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
 
     // Variables Declaration
@@ -74,6 +75,7 @@ bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
     Mat* next_bot_ptr;
     Mat* prev_bot_ptr;
     start_t = omp_get_wtime();
+    // Parallélisation
     #pragma omp parallel
     #pragma omp single
     {
