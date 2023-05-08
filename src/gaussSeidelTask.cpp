@@ -35,7 +35,7 @@ bool Task_Diag_Bot(const Mat m_Src_border, Mat &m_Dst_border,int rows,int cols){
     return true;
 }
 // Partie parallél
-bool AddGaussSeidelDiag(const Mat m_Src, Mat &m_Dst, int it){
+bool AddGaussSeidelTask(const Mat m_Src, Mat &m_Dst, int it){
 
     // Variables Declaration
     int rows = m_Src.rows, cols = m_Src.cols;

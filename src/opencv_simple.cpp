@@ -46,20 +46,15 @@ int main(int argc, char** argv)
     }
 
     // Denoiser
-    // gauss-seidel Naive
+    // gauss-seidel Naive 
     Mat mTmp = mColorNoise.clone();
     AddGaussSeidel(mTmp,mGaussSeidel, GAUSS_ITER);
 
-
-    //Gauss Seidel Diagonal algorithm version wave (parallel sur les diagonales)
-    // mTmp = mColorNoise.clone();
-    // AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, GAUSS_ITER);
-
     //Gauss Seidel Task (parallel entre les itérations)
     mTmp = mColorNoise.clone();
-    AddGaussSeidelDiag(mTmp,mGaussSeidelTask, GAUSS_ITER);
+    AddGaussSeidelTask(mTmp,mGaussSeidelTask, GAUSS_ITER);
 
-    // wave
+    // Parcours en diagonal - parallelisation possible sur les diagonal trop limité donc pas fais mais suffit juste de rajouter une ligne de code :)
     mTmp = mColorNoise.clone();
     for(int i = 0; i < GAUSS_ITER; ++i){
         AddGaussSeidel_wave(mTmp,mGaussSeidelDiag);

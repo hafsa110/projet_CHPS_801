@@ -12,5 +12,5 @@ make clean
 make
 ./opencv_test.pgr votreimage
 ```
-gaussSeidelTaks.cpp => version openmp task de gauss seidel et découpage en deux (divide to conqueer)
-gaussSeidel.cpp => version naîf et version parcours en diagonal
+gaussSeidelTaks.cpp => version openmp task de gauss seidel et découpage en deux (divide to conqueer) fonction AddGaussSeidelTask
+gaussSeidel.cpp => version naîf et version parcours en diagonal - fonction AddGaussSeidel_wave et AddGaussSeidel
