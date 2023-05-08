@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-#define DENOISE_ITER 15
+#define DENOISE_ITER 30
 
 bool applyJacobi(const Mat m_Src, Mat &m_Dst){
   Mat m_Src_border(m_Src.rows,m_Src.cols,m_Src.type());
@@ -60,9 +60,6 @@ int main( int argc, char* argv[] )
       return 1;
   }
 
-  int rows = img.rows;
-  int cols = img.cols;
-
   Kokkos::initialize(argc, argv);
   {
 
@@ -70,12 +67,6 @@ int main( int argc, char* argv[] )
 
   #ifdef KOKKOS_ENABLE_CUDA
   #define MemSpace Kokkos::CudaSpace
-  #endif
-  #ifdef KOKKOS_ENABLE_HIP
-  #define MemSpace Kokkos::Experimental::HIPSpace
-  #endif
-  #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  #define MemSpace Kokkos::OpenMPTargetSpace
   #endif
 
   #ifndef MemSpace
@@ -85,53 +76,123 @@ int main( int argc, char* argv[] )
   using ExecSpace = MemSpace::execution_space;
   using range_policy = Kokkos::RangePolicy<ExecSpace>;
 
-  typedef Kokkos::RangePolicy<ExecSpace>  range_policy;
+  typedef Kokkos::RangePolicy<ExecSpace> range_policy;
+
+  struct timeval start, end;
+  double elapsed_time;
+
+  int rows = img.rows;
+  int cols = img.cols;
+
 
   // Allocate Matrix on device.
-  Kokkos::View<cv::Vec3b**, Kokkos::LayoutRight, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>> mColorDenoise(reinterpret_cast<Vec3b*>(img.data), img.rows, img.cols);
+  typedef Kokkos::View<uchar**[3], ExecSpace> ViewMatrix;
 
-  Kokkos::Timer timer;
+  ViewMatrix mColorDenoise("mColorDenoise", rows, cols);
+  ViewMatrix::HostMirror h_mColorDenoise = Kokkos::create_mirror_view(mColorDenoise);
 
-  Kokkos :: parallel_for(DENOISE_ITER, 
-    [=] (const int64_t it) {
-      //mise a jour des points rouges
-      for(int i = 0; i < rows; ++i){
-        for (int j = 0; j < cols; ++j) {
-          if((i+j)%2 == 0){
-            for(int chanel = 0; chanel < 3; chanel++){
-              mColorDenoise(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1,j)[chanel] +
-                mColorDenoise(i,j - 1)[chanel] + mColorDenoise(i + 1,j)[chanel] +
-                mColorDenoise(i,j + 1)[chanel] + mColorDenoise(i, j)[chanel]) / 5;
-            } 
-          }
-        }
-      }
-
-      //mise a jour des points noirs 
-      for(int i = 0; i < rows; ++i){
-        for (int j = 0; j < cols; ++j) {
-          if((i+j)%2 == 1){
-            for(int chanel = 0; chanel < 3; chanel++){
-              mColorDenoise(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1,j)[chanel] +
-                mColorDenoise(i,j - 1)[chanel] + mColorDenoise(i + 1,j)[chanel] +
-                mColorDenoise(i,j + 1)[chanel] + mColorDenoise(i, j)[chanel]) / 5;
-            } 
-          }
-        }
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      Vec3b pixels = img.at<Vec3b>(i, j);
+      for (int c = 0; c < 3; c++) {
+        h_mColorDenoise(i, j, c) = pixels.val[c];
       }
     }
-  );
+  }
 
-  double end_t = timer.seconds();
+  Kokkos::deep_copy(mColorDenoise, h_mColorDenoise);
 
-  cout << "| Red Black with Kokkos approch version took " << end_t << " seconds." << endl;
+  gettimeofday(&start, nullptr);
 
-  std::memcpy(img.data, reinterpret_cast<uchar*>(mColorDenoise.data()), img.total() * img.elemSize());
+  for (int it = 0; it<DENOISE_ITER; ++it) {
+    //mise a jour des points rouges
+    Kokkos::parallel_for("red update", range_policy(0, rows), KOKKOS_LAMBDA(int i) {
+      for (int j = 0; j < cols; ++j) {
+        if((i+j)%2 == 0){
+          for(int c = 0; c < 3; c++){
+            mColorDenoise(i,j, c) = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1, j, c) +
+              mColorDenoise(i,j - 1, c) + mColorDenoise(i + 1,j, c) +
+              mColorDenoise(i,j + 1, c) + mColorDenoise(i, j, c)) / 5;
+          } 
+        }
+      }
+    });
 
-  imwrite("res/redBlack_res_farida.jpg", img);
+    //mise a jour des points noirs 
+    Kokkos::parallel_for("black update", range_policy(0, rows), KOKKOS_LAMBDA(int i) {
+      for (int j = 0; j < cols; ++j) {
+        if((i+j)%2 == 1){
+          for(int c = 0; c < 3; c++){
+            mColorDenoise(i,j, c) = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoise(i - 1,j, c) +
+              mColorDenoise(i,j - 1, c) + mColorDenoise(i + 1,j, c) +
+              mColorDenoise(i,j + 1, c) + mColorDenoise(i, j, c)) / 5;
+          } 
+        }
+      }
+    });
+  }
+
+  gettimeofday(&end, nullptr);
+  elapsed_time = static_cast<double>(end.tv_sec - start.tv_sec) +
+                static_cast<double>(end.tv_usec - start.tv_usec) / 1e6;
+
+  Kokkos::deep_copy(h_mColorDenoise, mColorDenoise);
+
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      Vec3b &pixels = img.at<Vec3b>(i,j);
+      for (int c = 0; c < 3; ++c) {
+        pixels.val[c] = h_mColorDenoise(i, j, c); 
+      }
+    }
+  }
+
+  cout << "| Red Black with Kokkos approch version took " << elapsed_time << " seconds." << endl;
+
+  imwrite("res/redBlack_res_cuda.jpg", img);
 
   }
   Kokkos::finalize();
+/*
+  Mat mColorDenoiseSeq(img.size(),img.type());
+  img.copyTo(mColorDenoiseSeq);
 
+  gettimeofday(&start, nullptr);
+
+  for(int it = 0; it < DENOISE_ITER; ++it){
+    //mise a jour des points rouges
+    for(int i = 0; i < rows; ++i){
+      for (int j = 0; j < cols; ++j) {
+        if((i+j)%2 == 0){
+          for(int chanel = 0; chanel < 3; chanel++){
+            mColorDenoiseSeq.at<Vec3b>(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoiseSeq.at<Vec3b>(i - 1,j)[chanel] +
+              mColorDenoiseSeq.at<Vec3b>(i,j - 1)[chanel] + mColorDenoiseSeq.at<Vec3b>(i + 1,j)[chanel] +
+              mColorDenoiseSeq.at<Vec3b>(i,j + 1)[chanel] + mColorDenoiseSeq.at<Vec3b>(i, j)[chanel]) / 5;
+          } 
+        }
+      }
+    }
+
+    //mise a jour des points noirs 
+    for(int i = 0; i < rows; ++i){
+      for (int j = 0; j < cols; ++j) {
+        if((i+j)%2 == 1){
+          for(int chanel = 0; chanel < 3; chanel++){
+            mColorDenoiseSeq.at<Vec3b>(i,j)[chanel] = (i == 0 || j == 0 || i == rows - 1 || j == cols - 1) ? 0.0 : (mColorDenoiseSeq.at<Vec3b>(i - 1,j)[chanel] +
+              mColorDenoiseSeq.at<Vec3b>(i,j - 1)[chanel] + mColorDenoiseSeq.at<Vec3b>(i + 1,j)[chanel] +
+              mColorDenoiseSeq.at<Vec3b>(i,j + 1)[chanel] + mColorDenoiseSeq.at<Vec3b>(i, j)[chanel]) / 5;
+          } 
+        }
+      }
+    }
+  }
+
+  gettimeofday(&end, nullptr);
+  elapsed_time = static_cast<double>(end.tv_sec - start.tv_sec) +
+                      static_cast<double>(end.tv_usec - start.tv_usec) / 1e6;
+
+  cout << "| Red Black sequential approch version took " << elapsed_time << " seconds." << endl;
+
+  */
   return 0;
 }
