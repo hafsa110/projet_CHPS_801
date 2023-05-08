@@ -1,15 +1,15 @@
 #!/bin/sh
 #SBATCH -J "Red Black Kokkos"
 
-#SBATCH --error=kokkos_15it.err
-#SBATCH --output=kokkos_15it.out
+#SBATCH --error=kokkos_cpu.err
+#SBATCH --output=kokkos_cpu.out
 
 #SBATCH -N 1 
 #SBATCH --gres=gpu:4
 #SBATCH -p short
 #SBATCH --reservation=CHPS
 #SBATCH --exclusive
-#SBATCH --exclude=romeo17,romeo19
+#SBATCH --exclude=romeo17,romeo19,romeo27
 
 export KOKKOS_PATH=/home/cchevalier/kokkos_work/kokkos
 export OMP_PROC_BIND=true
@@ -21,11 +21,12 @@ module load opencv/4.5.1
 module list
 
 # array of file names
-files=("/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_amphi.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_erlon.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_farida.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_img.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_large.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_lena.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_oran.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_rocher.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_toulouse.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_ufr.jpg")
+files=("/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_amphi.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_erlon.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_farida.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_large.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_lena.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_oran.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_toulouse.jpg" "/home/hdemnati/CHPS/801/projet_CHPS_801/kokkos/img/noised_res_ufr.jpg")
 
 # loop over file names and run command
 for file in "${files[@]}"
 do
   echo "Processing $file"
   ./redBlackJacobi.host $file
+  #./redBlackJacobi.cuda $file 
 done

@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-#define DENOISE_ITER 30
+#define DENOISE_ITER 100
 
 bool applyJacobi(const Mat m_Src, Mat &m_Dst){
   Mat m_Src_border(m_Src.rows,m_Src.cols,m_Src.type());
@@ -60,6 +60,12 @@ int main( int argc, char* argv[] )
       return 1;
   }
 
+  struct timeval start, end;
+  double elapsed_time;
+
+  int rows = img.rows;
+  int cols = img.cols;
+
   Kokkos::initialize(argc, argv);
   {
 
@@ -77,13 +83,6 @@ int main( int argc, char* argv[] )
   using range_policy = Kokkos::RangePolicy<ExecSpace>;
 
   typedef Kokkos::RangePolicy<ExecSpace> range_policy;
-
-  struct timeval start, end;
-  double elapsed_time;
-
-  int rows = img.rows;
-  int cols = img.cols;
-
 
   // Allocate Matrix on device.
   typedef Kokkos::View<uchar**[3], ExecSpace> ViewMatrix;
@@ -149,11 +148,11 @@ int main( int argc, char* argv[] )
 
   cout << "| Red Black with Kokkos approch version took " << elapsed_time << " seconds." << endl;
 
-  imwrite("res/redBlack_res_cuda.jpg", img);
+  imwrite("res/redBlack_res_kokkos.jpg", img);
 
   }
   Kokkos::finalize();
-/*
+
   Mat mColorDenoiseSeq(img.size(),img.type());
   img.copyTo(mColorDenoiseSeq);
 
@@ -193,6 +192,7 @@ int main( int argc, char* argv[] )
 
   cout << "| Red Black sequential approch version took " << elapsed_time << " seconds." << endl;
 
-  */
+  imwrite("res/redBlack_res_seq.jpg", img);
+
   return 0;
 }
