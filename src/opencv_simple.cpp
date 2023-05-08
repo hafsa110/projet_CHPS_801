@@ -8,8 +8,8 @@
 using namespace cv;
 using namespace std;
 
-#define NOISE_ITER 5
-#define BLUR_ITER 100
+#define NOISE_ITER 10
+#define BLUR_ITER 10
 
 int main(int argc, char** argv)
 {
@@ -52,19 +52,19 @@ int main(int argc, char** argv)
 
 
     //Gauss Seidel Diagonal algorithm
-    mTmp = mColorNoise.clone();
-    AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, BLUR_ITER);
+    // mTmp = mColorNoise.clone();
+    // AddGaussSeidelLoop(mTmp,mGaussSeidelDiag, BLUR_ITER);
 
     //Gauss Seidel Task (parallel)
     mTmp = mColorNoise.clone();
     AddGaussSeidelDiag(mTmp,mGaussSeidelTask, BLUR_ITER);
 
-    // Jacobi
-    // mTmp = mColorNoise.clone();
-    // for(int i = 0; i < BLUR_ITER; ++i){
-    //     AddJacobi(mTmp,mJacobi);
-    //     mTmp = mJacobi;
-    // }
+    // wave
+    mTmp = mColorNoise.clone();
+    for(int i = 0; i < BLUR_ITER; ++i){
+        AddGaussSeidel_wave(mTmp,mGaussSeidelDiag);
+        mTmp = mGaussSeidelDiag;
+    }
     // AddGaussianNoise_Opencv(img,mColorNoise,10,30.0);//I recommend to use this way!
 
    uint8_t* pixelPtr = (uint8_t*)img.data;
