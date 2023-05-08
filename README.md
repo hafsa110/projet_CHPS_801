@@ -1,7 +1,16 @@
 # projet_CHPS_801
 
 ```
-Utiliser ./load_modules.sh
 module load opencv/
 module load gcc/ (une version 4)
 ```
+
+# partie openmp task
+```
+cd src
+make clean
+make
+./opencv_test.pgr votreimage
+```
+gaussSeidelTaks.cpp => version openmp task de gauss seidel et découpage en deux (divide to conqueer)
+gaussSeidel.cpp => version naîf et version parcours en diagonal
